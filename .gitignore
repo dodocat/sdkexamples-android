@@ -23,3 +23,8 @@ local.properties
 */.project
 */.settings
 ChatDemoUI/project.properties
+
+.idea/
+*.iml
+.gradle/
+**/build/
