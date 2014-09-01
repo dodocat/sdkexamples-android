@@ -67,6 +67,7 @@ import com.easemob.chatuidemo.utils.ImageUtils;
 import com.easemob.chatuidemo.utils.SmileUtils;
 import com.easemob.exceptions.EaseMobException;
 import com.easemob.util.DateUtils;
+import com.easemob.util.EMLog;
 import com.easemob.util.FileUtils;
 import com.easemob.util.LatLng;
 import com.easemob.util.TextFormater;
@@ -113,10 +114,16 @@ public class MessageAdapter extends BaseAdapter {
 	// this.user = user;
 	// }
 
+	/**
+	 * 获取item数
+	 */
 	public int getCount() {
 		return conversation.getMsgCount();
 	}
-
+	
+	/**
+	 * 刷新页面
+	 */
 	public void refresh() {
 		notifyDataSetChanged();
 	}
@@ -129,6 +136,9 @@ public class MessageAdapter extends BaseAdapter {
 		return position;
 	}
 
+	/**
+	 * 获取item类型
+	 */
 	public int getItemViewType(int position) {
 		EMMessage message = conversation.getMessage(position);
 		if (message.getType() == EMMessage.Type.TXT) {
@@ -258,6 +268,10 @@ public class MessageAdapter extends BaseAdapter {
 					holder.tv = (TextView)convertView.findViewById(R.id.pb_sending);
 				} catch (Exception e) {
 				}
+				try {
+					holder.tv_userId = (TextView) convertView.findViewById(R.id.tv_userid);
+				} catch (Exception e) {
+				}
 
 			}
 
@@ -296,22 +310,22 @@ public class MessageAdapter extends BaseAdapter {
 
 		switch (message.getType()) {
 		// 根据消息type显示item
-		case IMAGE:
+		case IMAGE: //图片
 			handleImageMessage(message, holder, position, convertView);
 			break;
-		case TXT:
+		case TXT: //文本
 			handleTextMessage(message, holder, position);
 			break;
-		case LOCATION:
+		case LOCATION: //位置
 			handleLocationMessage(message, holder, position, convertView);
 			break;
-		case VOICE:
+		case VOICE: //语音
 			handleVoiceMessage(message, holder, position, convertView);
 			break;
-		case VIDEO:
+		case VIDEO: //视频
 			handleVideoMessage(message, holder, position, convertView);
 			break;
-		case FILE:
+		case FILE: //一般文件
 			handleFileMessage(message, holder, position, convertView);
 			break;
 		default:
@@ -390,7 +404,9 @@ public class MessageAdapter extends BaseAdapter {
 	private void handleTextMessage(EMMessage message, ViewHolder holder, final int position) {
 		TextMessageBody txtBody = (TextMessageBody) message.getBody();
 		Spannable span = SmileUtils.getSmiledText(context, txtBody.getMessage());
+		//设置内容
 		holder.tv.setText(span, BufferType.SPANNABLE);
+		//设置长按事件监听
 		holder.tv.setOnLongClickListener(new OnLongClickListener() {
 			@Override
 			public boolean onLongClick(View v) {
@@ -400,19 +416,22 @@ public class MessageAdapter extends BaseAdapter {
 				return true;
 			}
 		});
+		
 		if (message.direct == EMMessage.Direct.SEND) {
 			switch (message.status) {
-			case SUCCESS:
+			case SUCCESS: //发送成功
 				holder.pb.setVisibility(View.GONE);
 				holder.staus_iv.setVisibility(View.GONE);
 				break;
-			case FAIL:
+			case FAIL: //发送失败
 				holder.pb.setVisibility(View.GONE);
 				holder.staus_iv.setVisibility(View.VISIBLE);
 				break;
-			case INPROGRESS:
+			case INPROGRESS: //发送中
+				holder.pb.setVisibility(View.VISIBLE);
 				break;
 			default:
+				//发送消息
 				sendMsgInBackground(message, holder);
 			}
 		}
@@ -452,9 +471,11 @@ public class MessageAdapter extends BaseAdapter {
 				holder.iv.setImageResource(R.drawable.default_image);
 				ImageMessageBody imgBody = (ImageMessageBody) message.getBody();
 				if (imgBody.getLocalUrl() != null) {
-					String filePath = imgBody.getLocalUrl();
-
-					String thumbnailPath = ImageUtils.getThumbnailImagePath(filePath);
+//					String filePath = imgBody.getLocalUrl();
+					String remotePath=imgBody.getRemoteUrl();
+					String filePath=ImageUtils.getImagePath(remotePath);
+					String thumbRemoteUrl=imgBody.getThumbnailUrl();
+					String thumbnailPath = ImageUtils.getThumbnailImagePath(thumbRemoteUrl);
 					showImageView(thumbnailPath, holder.iv, filePath, imgBody.getRemoteUrl(), message);
 				}
 			}
@@ -465,11 +486,12 @@ public class MessageAdapter extends BaseAdapter {
 		// send pic, show the pic directly
 		ImageMessageBody imgBody = (ImageMessageBody) message.getBody();
 		String filePath = imgBody.getLocalUrl();
-		if (new File(filePath).exists())
+		if (filePath!=null&&new File(filePath).exists())
 			showImageView(ImageUtils.getThumbnailImagePath(filePath), holder.iv, filePath, null, message);
-		else {
-			showImageView(ImageUtils.getThumbnailImagePath(filePath), holder.iv, filePath, IMAGE_DIR, message);
-		}
+//		else 
+//		{
+//			showImageView(ImageUtils.getThumbnailImagePath(filePath), holder.iv, filePath, IMAGE_DIR, message);
+//		}
 
 		switch (message.status) {
 		case SUCCESS:
@@ -572,14 +594,14 @@ public class MessageAdapter extends BaseAdapter {
 
 		if (message.direct == EMMessage.Direct.RECEIVE) {
 
-			System.err.println("it is receive msg");
+			//System.err.println("it is receive msg");
 			if (message.status == EMMessage.Status.INPROGRESS) {
-				System.err.println("!!!! back receive");
+				//System.err.println("!!!! back receive");
 				holder.iv.setImageResource(R.drawable.default_image);
 				showDownloadImageProgress(message, holder);
 
 			} else {
-				System.err.println("!!!! not back receive, show image directly");
+				//System.err.println("!!!! not back receive, show image directly");
 				holder.iv.setImageResource(R.drawable.default_image);
 				if (localThumb != null) {
 					showVideoThumbView(localThumb, holder.iv, videoBody.getThumbnailUrl(), message);
@@ -834,6 +856,7 @@ public class MessageAdapter extends BaseAdapter {
 			}, 0, 500);
 			break;
 		default:
+			//发送消息
 			sendMsgInBackground(message, holder);
 		}
 
@@ -877,6 +900,7 @@ public class MessageAdapter extends BaseAdapter {
 			holder.staus_iv.setVisibility(View.VISIBLE);
 			break;
 		case INPROGRESS:
+			holder.pb.setVisibility(View.VISIBLE);
 			break;
 		default:
 			sendMsgInBackground(message, holder);
@@ -892,6 +916,7 @@ public class MessageAdapter extends BaseAdapter {
 	public void sendMsgInBackground(final EMMessage message, final ViewHolder holder) {
 		holder.staus_iv.setVisibility(View.GONE);
 		holder.pb.setVisibility(View.VISIBLE);
+		//调用sdk发送异步发送方法
 		EMChatManager.getInstance().sendMessage(message, new EMCallBack() {
 
 			@Override
@@ -1064,11 +1089,11 @@ public class MessageAdapter extends BaseAdapter {
 	 */
 	private boolean showImageView(final String thumbernailPath, final ImageView iv, final String localFullSizePath, String remoteDir,
 			final EMMessage message) {
-		String imagename = localFullSizePath.substring(localFullSizePath.lastIndexOf("/") + 1, localFullSizePath.length());
+//		String imagename = localFullSizePath.substring(localFullSizePath.lastIndexOf("/") + 1, localFullSizePath.length());
 		// final String remote = remoteDir != null ? remoteDir+imagename :
 		// imagename;
 		final String remote = remoteDir;
-
+		EMLog.d("###", "local = " + localFullSizePath + " remote: " + remote);
 		// first check if the thumbnail image already loaded into cache
 		Bitmap bitmap = ImageCache.getInstance().get(thumbernailPath);
 		if (bitmap != null) {

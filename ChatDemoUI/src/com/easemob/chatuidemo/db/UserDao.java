@@ -13,7 +13,6 @@
  */
 package com.easemob.chatuidemo.db;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +31,7 @@ public class UserDao {
 	public static final String TABLE_NAME = "uers";
 	public static final String COLUMN_NAME_ID = "username";
 	public static final String COLUMN_NAME_NICK = "nick";
-	
+	public static final String COLUMN_NAME_IS_STRANGER = "is_stranger";
 
 	private DbOpenHelper dbHelper;
 
@@ -54,7 +53,7 @@ public class UserDao {
 				values.put(COLUMN_NAME_ID, user.getUsername());
 				if(user.getNick() != null)
 					values.put(COLUMN_NAME_NICK, user.getNick());
-				db.insert(TABLE_NAME, null, values);
+				db.replace(TABLE_NAME, null, values);
 			}
 		}
 	}
@@ -124,7 +123,7 @@ public class UserDao {
 		if(user.getNick() != null)
 			values.put(COLUMN_NAME_NICK, user.getNick());
 		if(db.isOpen()){
-			db.insert(TABLE_NAME, null, values);
+			db.replace(TABLE_NAME, null, values);
 		}
 	}
 	
