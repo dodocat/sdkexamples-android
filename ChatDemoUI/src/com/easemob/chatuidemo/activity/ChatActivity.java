@@ -825,8 +825,11 @@ public class ChatActivity extends BaseActivity implements OnClickListener {
 		} else if ("file".equalsIgnoreCase(uri.getScheme())) {
 			filePath = uri.getPath();
 		}
-		File file = new File(filePath);
-		if (file == null || !file.exists()) {
+        File file = null;
+        if (filePath != null) {
+            file = new File(filePath);
+        }
+        if (file == null || !file.exists()) {
 			Toast.makeText(getApplicationContext(), "文件不存在", 0).show();
 			return;
 		}
