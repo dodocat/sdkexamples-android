@@ -90,7 +90,7 @@ public class LoadImageTask extends AsyncTask<Object, Void, Bitmap> {
 	                        //The local full size pic does not exist yet. ShowBigImage needs to download it from the server first
 	                        intent.putExtra("remotepath", remotePath);                          
 	                    }  
-	                    if (message.getChatType() != ChatType.Chat) {
+	                    if (message != null && message.getChatType() != ChatType.Chat) {
 	                        // delete the image from server after download
 	                    }
 	                    if(message != null && message.direct == EMMessage.Direct.RECEIVE && !message.isAcked){
